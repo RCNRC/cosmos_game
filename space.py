@@ -13,6 +13,9 @@ STARS_SYMBOLS = '*.:+'
 
 
 class Position:
+    """
+    Представляет собой позицию объекта в двумерном пространстве.
+    """
     def __init__(self, raw, col, max_raw, max_col) -> None:
         self.raw = raw
         self.col = col
@@ -20,6 +23,9 @@ class Position:
         self.max_col = max_col
 
     def move(self, delta_raw, delta_col):
+        """
+        Двигает объект в указанных направлениях.
+        """
         new_raw = self.raw + delta_raw
         if self.max_raw > new_raw > 0:
             self.raw = new_raw
@@ -29,14 +35,26 @@ class Position:
 
 
 class StarShip:
+    """
+    Представляет собой космический корабль.
+    """
     rocket_path = './media/star_ship'
 
     def __init__(self, canvas, raw: int = 1, col: int = 1) -> None:
-        star_shim_files = sorted(listdir(self.rocket_path))
+        max_raw, max_col = self.initial_animations(canvas)
+        self.canvas = canvas
+        self.prev_animation = None
+        self.position = Position(raw, col, max_raw, max_col)
+
+    def initial_animations(self, canvas) -> tuple[int]:
+        """
+        Инициализация анимаций.
+        """
+        star_ship_files = sorted(listdir(self.rocket_path))
         star_ship_animations = []
         heght, width = curses.window.getmaxyx(canvas)
         max_raw, max_col = heght - 1, width - 1
-        for file in star_shim_files:
+        for file in star_ship_files:
             with open(
                 join(self.rocket_path, file),
                 'r', encoding='utf-8'
@@ -52,11 +70,12 @@ class StarShip:
                 max_raw = min(max_raw, heght - lines_count)
                 star_ship_animations.append(shot)
         self.star_ship_animation = cycle(star_ship_animations)
-        self.canvas = canvas
-        self.prev_animation = None
-        self.position = Position(raw, col, max_raw, max_col)
+        return max_raw, max_col
 
     def draw(self):
+        """
+        Отрисовывает текущее положение корабля.
+        """
         if self.prev_animation:
             draw_frame(
                 self.canvas,
@@ -66,7 +85,7 @@ class StarShip:
                 True
             )
         delta_raw, delta_col, _ = read_controls(self.canvas)
-        self.position.move(delta_raw*10, delta_col*10)
+        self.position.move(delta_raw*1, delta_col*1)
         self.prev_animation = next(self.star_ship_animation)
         draw_frame(
             self.canvas,
@@ -107,6 +126,9 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 
 
 async def blink(canvas, row, column, symbol='*', initial_sleep=0):
+    """
+    Отрисовывает звезду с анимацией.
+    """
     for _ in range(initial_sleep):
         await asyncio.sleep(0)
     while True:
@@ -125,6 +147,9 @@ async def blink(canvas, row, column, symbol='*', initial_sleep=0):
 
 
 def draw(canvas):
+    """
+    Отрисовывает на холсте объекты.
+    """
     canvas.border()
     canvas.nodelay(True)
 
